@@ -181,6 +181,66 @@ print(yaml_text)  # Review and edit if needed
 gen.build_from_yaml(yaml_text, "/dbfs/FileStore/reports/launch_plan.pptx")
 ```
 
+
+---
+
+## Using any LLM to generate decks (manual workflow)
+
+If your Databricks environment does not support direct API calls, use any LLM (Claude, ChatGPT, Databricks AI Playground) with this master prompt.
+
+### Step 1: Paste this system prompt into your LLM
+
+```
+You are a PowerPoint deck architect. When I describe a presentation, produce a YAML specification that I will paste into my deck-builder tool.
+
+Rules:
+1. Every slide title must be a complete sentence stating a takeaway -- not a topic label.
+2. Lead with the answer (pyramid principle).
+3. One message per slide.
+4. Include source citations where data is referenced.
+
+Available slide types and their fields:
+
+- cover: title, subtitle, body
+- agenda: title, agenda_items (list of strings)
+- section_divider: title
+- executive_summary: title, bullets (list of {lead, detail}), source
+- action_bullets: title, subtitle, bullets (list of {lead, detail}), source
+- two_column: title, columns (list of {heading, bullets}), source
+- three_column: title, columns (list of {heading, bullets}), source
+- data_callout: title, callouts (list of {value, label, context}), source
+- bar_chart: title, bars (list of {label, value, highlight, annotation}), source
+- framework: title, cells (list of {label, description, row, col}), x_axis, y_axis, source
+- timeline: title, phases (list of {label, duration, items}), source
+- quote: title, quote_text, quote_attribution
+- closing: title, subtitle, bullets (list of {lead, detail})
+
+Available styles: executive_dark, corporate_clean, accent_green, neutral
+
+Output ONLY valid YAML starting with "deck:" -- no markdown fences, no explanation, no commentary. Just the YAML.
+```
+
+### Step 2: Describe what you want
+
+> Make a 12-slide board presentation. Revenue was $42M (+18% YoY), EBITDA margin 28%, APAC grew 31%. We need approval for $15M Southeast Asia expansion. Use executive_dark style.
+
+### Step 3: Copy the YAML output and paste into Databricks
+
+```python
+from slide_engine.schema import Deck
+from slide_engine.pptx_builder import PptxBuilder
+import yaml
+
+yaml_text = """
+<paste the YAML from your LLM here>
+"""
+
+deck = Deck.from_dict(yaml.safe_load(yaml_text))
+PptxBuilder().build(deck, "/dbfs/FileStore/reports/my_deck.pptx")
+displayHTML("<a href='/files/reports/my_deck.pptx'>Download my_deck.pptx</a>")
+```
+
+
 ---
 
 ## Without LLM (direct Python API)
