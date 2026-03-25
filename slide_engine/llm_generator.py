@@ -93,3 +93,82 @@ class DeckGenerator:
 def generate_deck(prompt, output_path="output.pptx", api_key=None, base_url=None, model="gpt-4o", style="neutral"):
     """One-liner: natural language to .pptx."""
     return DeckGenerator(api_key=api_key, base_url=base_url, model=model).generate(prompt, output_path=output_path, style=style)
+
+
+def load_yaml_text(yaml_text):
+    """
+    Robust YAML loader for LLM-generated deck specs.
+    Handles all common formats: dict with 'deck' key, bare dict, list of slides,
+    markdown fences, extra whitespace, etc.
+    
+    Usage in Databricks:
+        from slide_engine.llm_generator import load_yaml_text
+        from slide_engine.pptx_builder import PptxBuilder
+        
+        deck = load_yaml_text(\"\"\"<paste YAML here>\"\"\")
+        PptxBuilder().build(deck, "/dbfs/FileStore/reports/my_deck.pptx")
+    """
+    import yaml as _yaml
+    
+    text = yaml_text.strip()
+    
+    # Strip markdown fences
+    if text.startswith("```"):
+        lines = text.split("\n")
+        lines = [l for l in lines if not l.strip().startswith("```")]
+        text = "\n".join(lines).strip()
+    
+    # Strip leading "yaml" if present
+    if text.startswith("yaml\n"):
+        text = text[5:]
+    
+    try:
+        data = _yaml.safe_load(text)
+    except _yaml.YAMLError as e:
+        raise ValueError(f"Could not parse YAML: {e}")
+    
+    if data is None:
+        raise ValueError("YAML parsed as empty. Check your input.")
+    
+    # Handle: list of slides (no deck wrapper)
+    if isinstance(data, list):
+        data = {"deck": {"title": "Presentation", "style": "neutral", "slides": data}}
+    
+    # Handle: dict with 'slides' but no 'deck' wrapper
+    elif isinstance(data, dict) and "slides" in data and "deck" not in data:
+        data = {"deck": data}
+    
+    # Handle: dict with 'deck' key (correct format)
+    elif isinstance(data, dict) and "deck" in data:
+        pass
+    
+    # Handle: dict with 'title' but no 'deck' wrapper
+    elif isinstance(data, dict) and "title" in data:
+        data = {"deck": data}
+    
+    # Handle: something else entirely
+    elif isinstance(data, dict):
+        data = {"deck": data}
+    
+    else:
+        raise ValueError(f"Unexpected YAML structure: {type(data)}")
+    
+    # Ensure deck has required fields
+    deck_data = data.get("deck", {})
+    if not isinstance(deck_data, dict):
+        raise ValueError(f"'deck' key should be a dictionary, got {type(deck_data)}")
+    
+    if "title" not in deck_data:
+        deck_data["title"] = "Presentation"
+    if "style" not in deck_data:
+        deck_data["style"] = "neutral"
+    if "slides" not in deck_data:
+        deck_data["slides"] = []
+    
+    # Ensure each slide has a 'type'
+    for i, slide in enumerate(deck_data.get("slides", [])):
+        if isinstance(slide, dict) and "type" not in slide:
+            slide["type"] = "action_bullets"
+    
+    data["deck"] = deck_data
+    return Deck.from_dict(data)
