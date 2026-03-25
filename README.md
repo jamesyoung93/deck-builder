@@ -224,6 +224,56 @@ Output ONLY valid YAML starting with "deck:" -- no markdown fences, no explanati
 
 > Make a 12-slide board presentation. Revenue was $42M (+18% YoY), EBITDA margin 28%, APAC grew 31%. We need approval for $15M Southeast Asia expansion. Use executive_dark style.
 
+For a more detailed deck with a process flow diagram, try this example prompt:
+
+> Build a 15-slide transformation roadmap deck in executive_dark style. We are migrating our data infrastructure to cloud over 18 months.
+>
+> Context: Current state has 12 fragmented systems with no unified data view. Only 15% digital channel adoption vs 35% industry benchmark.
+>
+> Include: executive summary with 4 key workstreams, a data callout slide with 3 key gap metrics, a two-column slide comparing current vs target state, a three-column slide with the 3 capability layers we need to build (data foundation, AI/analytics engine, experience delivery), a timeline with 3 phases (foundation Q1-Q2, build and pilot Q3-Q4, scale and optimize H1 next year), a bar chart showing projected value by workstream, and a closing slide with 3 requested board decisions.
+>
+> Also include a process_flow slide with this flow_spec that shows the data architecture:
+>
+> The flow should have 4 groups: Data Sources (containing CRM Data and Claims Data nodes), Data Platform (containing Data Lake and Feature Store), AI Engine (containing Segmentation Model and Recommendation Engine), and Outputs (containing Sales Targeting and Customer Engagement). Connect sources to platform, platform to AI, AI to outputs, and add a feedback edge from outputs back to platform labeled "performance signals".
+
+The process_flow slide type will render as native PowerPoint vector shapes with pixel-perfect text when the YAML includes a flow_spec block like:
+
+```yaml
+    - type: process_flow
+      title: "The data architecture connects sources through three layers to business outcomes"
+      source: "Architecture design"
+      flow_spec:
+        name: "Data Architecture"
+        view_mode: process_flow
+        groups:
+          - {id: sources, label: "Data Sources"}
+          - {id: platform, label: "Data Platform"}
+          - {id: ai, label: "AI Engine"}
+          - {id: outputs, label: "Business Outputs"}
+        nodes:
+          - {id: crm, label: "CRM Data", node_type: data, group: sources}
+          - {id: claims, label: "Claims Data", node_type: data, group: sources}
+          - {id: lake, label: "Data Lake", node_type: subprocess, group: platform}
+          - {id: features, label: "Feature Store", node_type: data, group: platform}
+          - {id: segmentation, label: "Segmentation Model", node_type: subprocess, group: ai}
+          - {id: nba, label: "Recommendation Engine", node_type: subprocess, group: ai}
+          - {id: targeting, label: "Sales Targeting", node_type: process, group: outputs}
+          - {id: engagement, label: "Customer Engagement", node_type: process, group: outputs}
+        edges:
+          - {source: crm, target: lake, edge_type: data_flow}
+          - {source: claims, target: lake, edge_type: data_flow}
+          - {source: lake, target: features, edge_type: flow}
+          - {source: features, target: segmentation, edge_type: data_flow}
+          - {source: features, target: nba, edge_type: data_flow}
+          - {source: segmentation, target: targeting, edge_type: causal}
+          - {source: nba, target: engagement, edge_type: causal}
+          - {source: engagement, target: lake, edge_type: feedback, label: "Performance signals"}
+```
+
+Available node_types: process, subprocess, data, gate, start, end, external, human, monitor, decision, latent, variable
+
+Available edge_types: flow, causal, feedback, conditional, data_flow, association, bidirectional
+
 ### Step 3: Copy the YAML output and paste into Databricks
 
 ```python
