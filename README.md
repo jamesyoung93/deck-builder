@@ -227,15 +227,14 @@ Output ONLY valid YAML starting with "deck:" -- no markdown fences, no explanati
 ### Step 3: Copy the YAML output and paste into Databricks
 
 ```python
-from slide_engine.schema import Deck
+from slide_engine.llm_generator import load_yaml_text
 from slide_engine.pptx_builder import PptxBuilder
-import yaml
 
 yaml_text = """
 <paste the YAML from your LLM here>
 """
 
-deck = Deck.from_dict(yaml.safe_load(yaml_text))
+deck = load_yaml_text(yaml_text)
 PptxBuilder().build(deck, "/dbfs/FileStore/reports/my_deck.pptx")
 displayHTML("<a href='/files/reports/my_deck.pptx'>Download my_deck.pptx</a>")
 ```
