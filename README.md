@@ -6,23 +6,25 @@ Generate consulting-quality PowerPoint presentations from natural language. All 
 
 ## Step 1: Install
 
-In a Databricks notebook cell:
-
 ```python
-%pip install https://github.com/jamesyoung93/deck-builder/raw/master/deck_builder-0.1.0-py3-none-any.whl
+# Cell 1: Install dependencies (once per cluster)
+%pip install python-pptx pyyaml matplotlib fontawesome pillow
+
+# Cell 2: Install deck-builder
+%pip install --no-deps https://github.com/jamesyoung93/deck-builder/raw/master/deck_builder-0.2.0-py3-none-any.whl
+
+# Cell 3: Restart Python (required after install)
+dbutils.library.restartPython()
 ```
 
-If that URL is blocked, download the `.whl` file from the repo and upload it:
+If the wheel URL is blocked, download `deck_builder-0.2.0-py3-none-any.whl` from the [repo](https://github.com/jamesyoung93/deck-builder) and upload it:
 
 ```python
-# From DBFS (upload via Databricks UI → Data → DBFS → FileStore)
-%pip install /dbfs/FileStore/deck_builder-0.1.0-py3-none-any.whl
-
-# From Unity Catalog Volume
-%pip install /Volumes/your_catalog/your_schema/your_volume/deck_builder-0.1.0-py3-none-any.whl
-
-# From Workspace Files
-%pip install /Workspace/Users/you@company.com/deck_builder-0.1.0-py3-none-any.whl
+%pip install python-pptx pyyaml matplotlib fontawesome pillow
+%pip install --no-deps /dbfs/FileStore/deck_builder-0.2.0-py3-none-any.whl
+# or: /Volumes/your_catalog/your_schema/your_volume/deck_builder-0.2.0-py3-none-any.whl
+# or: /Workspace/Users/you@company.com/deck_builder-0.2.0-py3-none-any.whl
+dbutils.library.restartPython()
 ```
 
 ---
@@ -114,7 +116,7 @@ Available styles: `executive_dark` | `corporate_clean` | `accent_green` | `neutr
 displayHTML('<a href="/files/reports/board_q2.pptx">Download board_q2.pptx</a>')
 ```
 
-Also browsable at: Databricks UI > Catalog > DBFS > FileStore > reports
+Also browsable at: Databricks UI → Catalog → DBFS → FileStore → reports
 
 Other save locations:
 
@@ -128,11 +130,13 @@ gen.generate("...", output_path="/Workspace/Users/you@company.com/my_deck.pptx")
 
 ---
 
-## Full copy-paste example (4 notebook cells)
+## Full copy-paste example
 
 ```python
-# Cell 1: Install
-%pip install https://github.com/jamesyoung93/deck-builder/raw/master/deck_builder-0.1.0-py3-none-any.whl
+# Cell 1: Install (once per cluster)
+%pip install python-pptx pyyaml matplotlib fontawesome pillow
+%pip install --no-deps https://github.com/jamesyoung93/deck-builder/raw/master/deck_builder-0.2.0-py3-none-any.whl
+dbutils.library.restartPython()
 ```
 
 ```python
@@ -169,11 +173,11 @@ displayHTML('<a href="/files/reports/qbr.pptx">Download QBR deck</a>')
 ## Advanced: review YAML before building
 
 ```python
-# Step 1: Generate YAML spec
+# Generate YAML spec without building
 yaml_text = gen.generate_yaml("Product launch plan for enterprise SaaS")
 print(yaml_text)  # Review and edit if needed
 
-# Step 2: Build from edited YAML
+# Build from edited YAML
 gen.build_from_yaml(yaml_text, "/dbfs/FileStore/reports/launch_plan.pptx")
 ```
 
