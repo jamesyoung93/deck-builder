@@ -1,0 +1,65 @@
+name: "Customer Order Fulfillment"
+description: "Simple linear commercial workflow from order placement to delivery"
+version: "1.0"
+view_mode: process_flow
+
+nodes:
+  - id: order_placed
+    label: "Customer Places Order"
+    node_type: start
+    process_role: input
+
+  - id: payment_processed
+    label: "Process Payment"
+    node_type: process
+    process_role: transform
+
+  - id: inventory_check
+    label: "Check Inventory"
+    node_type: process
+    process_role: validate
+
+  - id: pick_pack
+    label: "Pick & Pack Items"
+    node_type: process
+    process_role: transform
+
+  - id: ship
+    label: "Ship Order"
+    node_type: process
+    process_role: transform
+
+  - id: delivery_confirm
+    label: "Confirm Delivery"
+    node_type: process
+    process_role: validate
+
+  - id: order_complete
+    label: "Order Complete"
+    node_type: end
+    process_role: output
+
+edges:
+  - source: order_placed
+    target: payment_processed
+    edge_type: flow
+
+  - source: payment_processed
+    target: inventory_check
+    edge_type: flow
+
+  - source: inventory_check
+    target: pick_pack
+    edge_type: flow
+
+  - source: pick_pack
+    target: ship
+    edge_type: flow
+
+  - source: ship
+    target: delivery_confirm
+    edge_type: flow
+
+  - source: delivery_confirm
+    target: order_complete
+    edge_type: flow

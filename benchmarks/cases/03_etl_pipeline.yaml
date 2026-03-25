@@ -1,0 +1,169 @@
+name: "ML Data Pipeline"
+description: "ETL / modeling / validation / deployment pipeline with parallel branches"
+version: "1.0"
+view_mode: process_flow
+
+groups:
+  - id: data_prep
+    label: "Data Preparation"
+  - id: modeling
+    label: "Model Training"
+  - id: evaluation
+    label: "Evaluation & Validation"
+  - id: deployment
+    label: "Deployment"
+
+nodes:
+  - id: raw_data
+    label: "Raw Data Sources"
+    node_type: data
+    group: data_prep
+    process_role: input
+
+  - id: extract
+    label: "Extract"
+    node_type: process
+    group: data_prep
+    process_role: transform
+
+  - id: transform
+    label: "Transform & Clean"
+    node_type: process
+    group: data_prep
+    process_role: transform
+
+  - id: validate_data
+    label: "Data Validation"
+    node_type: gate
+    group: data_prep
+    process_role: validate
+
+  - id: feature_eng
+    label: "Feature Engineering"
+    node_type: process
+    group: modeling
+    process_role: transform
+
+  - id: train_split
+    label: "Train/Test Split"
+    node_type: process
+    group: modeling
+    process_role: transform
+
+  - id: model_train
+    label: "Train Model"
+    node_type: subprocess
+    group: modeling
+    process_role: transform
+
+  - id: hyperparameter
+    label: "Hyperparameter Tuning"
+    node_type: subprocess
+    group: modeling
+    process_role: transform
+
+  - id: model_eval
+    label: "Evaluate Model"
+    node_type: process
+    group: evaluation
+    process_role: validate
+
+  - id: cross_val
+    label: "Cross-Validation"
+    node_type: process
+    group: evaluation
+    process_role: validate
+
+  - id: perf_gate
+    label: "Performance Gate"
+    node_type: gate
+    group: evaluation
+    process_role: approve
+
+  - id: staging
+    label: "Deploy to Staging"
+    node_type: process
+    group: deployment
+    process_role: deploy
+
+  - id: ab_test
+    label: "A/B Test"
+    node_type: process
+    group: deployment
+    process_role: validate
+
+  - id: production
+    label: "Deploy to Production"
+    node_type: end
+    group: deployment
+    process_role: deploy
+
+edges:
+  - source: raw_data
+    target: extract
+    edge_type: flow
+
+  - source: extract
+    target: transform
+    edge_type: flow
+
+  - source: transform
+    target: validate_data
+    edge_type: flow
+
+  - source: validate_data
+    target: feature_eng
+    edge_type: flow
+
+  - source: feature_eng
+    target: train_split
+    edge_type: flow
+
+  - source: train_split
+    target: model_train
+    edge_type: flow
+
+  - source: model_train
+    target: hyperparameter
+    edge_type: flow
+
+  - source: hyperparameter
+    target: model_train
+    edge_type: feedback
+    label: "Retune"
+
+  - source: model_train
+    target: model_eval
+    edge_type: flow
+
+  - source: model_eval
+    target: cross_val
+    edge_type: flow
+
+  - source: cross_val
+    target: perf_gate
+    edge_type: flow
+
+  - source: perf_gate
+    target: staging
+    edge_type: conditional
+    label: "Pass"
+
+  - source: perf_gate
+    target: feature_eng
+    edge_type: feedback
+    label: "Fail - Revisit"
+
+  - source: staging
+    target: ab_test
+    edge_type: flow
+
+  - source: ab_test
+    target: production
+    edge_type: conditional
+    label: "Winner"
+
+  - source: ab_test
+    target: model_train
+    edge_type: feedback
+    label: "Underperforms"

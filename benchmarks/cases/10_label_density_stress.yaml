@@ -1,0 +1,143 @@
+name: "Enterprise Integration Platform Configuration Management Workflow"
+description: "Stress test with extremely long labels, high node density, and complex edge patterns"
+version: "1.0"
+view_mode: process_flow
+
+groups:
+  - id: intake
+    label: "Requirements Intake and Stakeholder Alignment Phase"
+  - id: implementation
+    label: "Technical Implementation and Configuration"
+  - id: testing
+    label: "Quality Assurance, Testing, and Validation"
+  - id: release
+    label: "Release Management and Post-Deployment Monitoring"
+
+nodes:
+  - id: req_gathering
+    label: "Gather Business Requirements from Multiple Stakeholder Groups Including Product, Engineering, and Compliance"
+    node_type: start
+    group: intake
+
+  - id: impact_analysis
+    label: "Perform Cross-System Impact Analysis and Dependency Mapping"
+    node_type: process
+    group: intake
+
+  - id: arch_review
+    label: "Architecture Review Board Assessment and Technical Feasibility Evaluation"
+    node_type: gate
+    group: intake
+
+  - id: resource_allocation
+    label: "Resource Allocation and Sprint Planning with Capacity Considerations"
+    node_type: process
+    group: intake
+
+  - id: env_setup
+    label: "Development Environment Setup and Configuration Baseline Establishment"
+    node_type: process
+    group: implementation
+
+  - id: api_integration
+    label: "API Integration Development with Third-Party Service Providers"
+    node_type: subprocess
+    group: implementation
+
+  - id: data_migration
+    label: "Data Migration Script Development and Transformation Logic Implementation"
+    node_type: subprocess
+    group: implementation
+
+  - id: ui_config
+    label: "User Interface Configuration and Custom Component Development"
+    node_type: subprocess
+    group: implementation
+
+  - id: security_config
+    label: "Security Configuration Including OAuth, RBAC, and Encryption Setup"
+    node_type: process
+    group: implementation
+
+  - id: code_review
+    label: "Peer Code Review and Static Analysis with SonarQube Integration"
+    node_type: gate
+    group: implementation
+
+  - id: unit_tests
+    label: "Unit Testing with Minimum 80% Code Coverage Requirement"
+    node_type: process
+    group: testing
+
+  - id: integration_tests
+    label: "End-to-End Integration Testing Across All Connected Systems"
+    node_type: process
+    group: testing
+
+  - id: perf_tests
+    label: "Performance and Load Testing Under Simulated Production Conditions"
+    node_type: process
+    group: testing
+
+  - id: security_scan
+    label: "Automated Security Vulnerability Scanning and Penetration Testing"
+    node_type: process
+    group: testing
+
+  - id: uat
+    label: "User Acceptance Testing with Business Stakeholder Sign-Off Required"
+    node_type: gate
+    group: testing
+
+  - id: change_approval
+    label: "Change Advisory Board Review and Production Deployment Approval"
+    node_type: gate
+    group: release
+
+  - id: staged_rollout
+    label: "Staged Production Rollout with Canary Deployment Strategy"
+    node_type: process
+    group: release
+
+  - id: monitoring
+    label: "Post-Deployment Monitoring and Alerting Configuration Verification"
+    node_type: monitor
+    group: release
+
+  - id: rollback_check
+    label: "Rollback Readiness Verification and Contingency Plan Activation Check"
+    node_type: decision
+    group: release
+
+  - id: complete
+    label: "Deployment Complete with Documentation and Knowledge Transfer"
+    node_type: end
+    group: release
+
+edges:
+  - { source: req_gathering, target: impact_analysis, edge_type: flow }
+  - { source: impact_analysis, target: arch_review, edge_type: flow }
+  - { source: arch_review, target: resource_allocation, edge_type: conditional, label: "Approved by Architecture Review Board" }
+  - { source: arch_review, target: req_gathering, edge_type: feedback, label: "Rejected - Requires Revised Requirements" }
+  - { source: resource_allocation, target: env_setup, edge_type: flow }
+  - { source: env_setup, target: api_integration, edge_type: flow }
+  - { source: env_setup, target: data_migration, edge_type: flow }
+  - { source: env_setup, target: ui_config, edge_type: flow }
+  - { source: api_integration, target: security_config, edge_type: flow }
+  - { source: data_migration, target: security_config, edge_type: flow }
+  - { source: ui_config, target: security_config, edge_type: flow }
+  - { source: security_config, target: code_review, edge_type: flow }
+  - { source: code_review, target: unit_tests, edge_type: conditional, label: "Review Passed" }
+  - { source: code_review, target: api_integration, edge_type: feedback, label: "Review Failed - Rework Required" }
+  - { source: unit_tests, target: integration_tests, edge_type: flow }
+  - { source: integration_tests, target: perf_tests, edge_type: flow }
+  - { source: perf_tests, target: security_scan, edge_type: flow }
+  - { source: security_scan, target: uat, edge_type: flow }
+  - { source: uat, target: change_approval, edge_type: conditional, label: "UAT Passed with Stakeholder Sign-Off" }
+  - { source: uat, target: integration_tests, edge_type: feedback, label: "UAT Failed - Fix and Retest" }
+  - { source: change_approval, target: staged_rollout, edge_type: conditional, label: "CAB Approved" }
+  - { source: change_approval, target: resource_allocation, edge_type: feedback, label: "Deferred to Next Release Window" }
+  - { source: staged_rollout, target: monitoring, edge_type: flow }
+  - { source: monitoring, target: rollback_check, edge_type: flow }
+  - { source: rollback_check, target: complete, edge_type: conditional, label: "All Systems Nominal" }
+  - { source: rollback_check, target: staged_rollout, edge_type: feedback, label: "Issues Detected - Rollback and Retry" }

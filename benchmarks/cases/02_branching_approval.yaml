@@ -1,0 +1,111 @@
+name: "Expense Approval Workflow"
+description: "Branching approval workflow with multiple decision points and escalation"
+version: "1.0"
+view_mode: process_flow
+
+nodes:
+  - id: submit
+    label: "Submit Expense Report"
+    node_type: start
+    process_role: input
+
+  - id: auto_check
+    label: "Automated Policy Check"
+    node_type: process
+    process_role: validate
+
+  - id: amount_decision
+    label: "Amount > $500?"
+    node_type: decision
+
+  - id: manager_review
+    label: "Manager Review"
+    node_type: gate
+    process_role: approve
+
+  - id: director_review
+    label: "Director Review"
+    node_type: gate
+    process_role: approve
+
+  - id: manager_decision
+    label: "Manager Approves?"
+    node_type: decision
+
+  - id: director_decision
+    label: "Director Approves?"
+    node_type: decision
+
+  - id: approved
+    label: "Expense Approved"
+    node_type: process
+    process_role: transform
+
+  - id: rejected
+    label: "Expense Rejected"
+    node_type: end
+
+  - id: payment
+    label: "Process Reimbursement"
+    node_type: process
+    process_role: transform
+
+  - id: notify
+    label: "Notify Employee"
+    node_type: end
+    process_role: output
+
+edges:
+  - source: submit
+    target: auto_check
+    edge_type: flow
+
+  - source: auto_check
+    target: amount_decision
+    edge_type: flow
+
+  - source: amount_decision
+    target: manager_review
+    edge_type: conditional
+    label: "≤ $500"
+
+  - source: amount_decision
+    target: director_review
+    edge_type: conditional
+    label: "> $500"
+
+  - source: manager_review
+    target: manager_decision
+    edge_type: flow
+
+  - source: director_review
+    target: director_decision
+    edge_type: flow
+
+  - source: manager_decision
+    target: approved
+    edge_type: conditional
+    label: "Yes"
+
+  - source: manager_decision
+    target: rejected
+    edge_type: conditional
+    label: "No"
+
+  - source: director_decision
+    target: approved
+    edge_type: conditional
+    label: "Yes"
+
+  - source: director_decision
+    target: rejected
+    edge_type: conditional
+    label: "No"
+
+  - source: approved
+    target: payment
+    edge_type: flow
+
+  - source: payment
+    target: notify
+    edge_type: flow

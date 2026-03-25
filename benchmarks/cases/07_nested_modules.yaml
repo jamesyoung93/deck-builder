@@ -1,0 +1,212 @@
+name: "E-Commerce Platform Architecture"
+description: "Complex system with nested modules representing a microservices architecture"
+version: "1.0"
+view_mode: modular
+
+groups:
+  - id: frontend
+    label: "Frontend Layer"
+  - id: api_gateway
+    label: "API Gateway"
+  - id: services
+    label: "Business Services"
+  - id: data_layer
+    label: "Data Layer"
+  - id: infrastructure
+    label: "Infrastructure"
+
+nodes:
+  # Frontend
+  - id: web_app
+    label: "Web Application"
+    node_type: external
+    group: frontend
+
+  - id: mobile_app
+    label: "Mobile App"
+    node_type: external
+    group: frontend
+
+  - id: admin_portal
+    label: "Admin Portal"
+    node_type: external
+    group: frontend
+
+  # API Gateway
+  - id: load_balancer
+    label: "Load Balancer"
+    node_type: process
+    group: api_gateway
+
+  - id: auth_middleware
+    label: "Auth Middleware"
+    node_type: gate
+    group: api_gateway
+
+  - id: rate_limiter
+    label: "Rate Limiter"
+    node_type: gate
+    group: api_gateway
+
+  # Services
+  - id: user_service
+    label: "User Service"
+    node_type: subprocess
+    group: services
+
+  - id: product_service
+    label: "Product Catalog Service"
+    node_type: subprocess
+    group: services
+
+  - id: order_service
+    label: "Order Service"
+    node_type: subprocess
+    group: services
+
+  - id: payment_service
+    label: "Payment Service"
+    node_type: subprocess
+    group: services
+
+  - id: notification_service
+    label: "Notification Service"
+    node_type: subprocess
+    group: services
+
+  - id: search_service
+    label: "Search Service"
+    node_type: subprocess
+    group: services
+
+  # Data Layer
+  - id: user_db
+    label: "User Database"
+    node_type: data
+    group: data_layer
+
+  - id: product_db
+    label: "Product Database"
+    node_type: data
+    group: data_layer
+
+  - id: order_db
+    label: "Order Database"
+    node_type: data
+    group: data_layer
+
+  - id: cache
+    label: "Redis Cache"
+    node_type: data
+    group: data_layer
+
+  - id: search_index
+    label: "Elasticsearch"
+    node_type: data
+    group: data_layer
+
+  # Infrastructure
+  - id: message_queue
+    label: "Message Queue"
+    node_type: process
+    group: infrastructure
+
+  - id: monitoring
+    label: "Monitoring & Logging"
+    node_type: monitor
+    group: infrastructure
+
+  - id: cdn
+    label: "CDN"
+    node_type: process
+    group: infrastructure
+
+edges:
+  # Frontend to Gateway
+  - source: web_app
+    target: load_balancer
+    edge_type: flow
+  - source: mobile_app
+    target: load_balancer
+    edge_type: flow
+  - source: admin_portal
+    target: load_balancer
+    edge_type: flow
+
+  # Gateway flow
+  - source: load_balancer
+    target: auth_middleware
+    edge_type: flow
+  - source: auth_middleware
+    target: rate_limiter
+    edge_type: flow
+
+  # Gateway to Services
+  - source: rate_limiter
+    target: user_service
+    edge_type: flow
+  - source: rate_limiter
+    target: product_service
+    edge_type: flow
+  - source: rate_limiter
+    target: order_service
+    edge_type: flow
+  - source: rate_limiter
+    target: search_service
+    edge_type: flow
+
+  # Service interactions
+  - source: order_service
+    target: payment_service
+    edge_type: flow
+  - source: order_service
+    target: notification_service
+    edge_type: data_flow
+    label: "order events"
+  - source: payment_service
+    target: notification_service
+    edge_type: data_flow
+    label: "payment events"
+
+  # Service to Data
+  - source: user_service
+    target: user_db
+    edge_type: data_flow
+  - source: product_service
+    target: product_db
+    edge_type: data_flow
+  - source: order_service
+    target: order_db
+    edge_type: data_flow
+  - source: product_service
+    target: cache
+    edge_type: data_flow
+  - source: search_service
+    target: search_index
+    edge_type: data_flow
+  - source: product_service
+    target: search_index
+    edge_type: data_flow
+    label: "sync"
+
+  # Async messaging
+  - source: order_service
+    target: message_queue
+    edge_type: data_flow
+  - source: message_queue
+    target: notification_service
+    edge_type: data_flow
+
+  # Monitoring
+  - source: user_service
+    target: monitoring
+    edge_type: data_flow
+  - source: order_service
+    target: monitoring
+    edge_type: data_flow
+
+  # CDN
+  - source: cdn
+    target: web_app
+    edge_type: flow
+    label: "static assets"

@@ -1,0 +1,173 @@
+name: "Clinical Trial Data Management"
+description: "Dense process with many stages that should be decomposed into subviews"
+version: "1.0"
+view_mode: process_flow
+
+groups:
+  - id: planning
+    label: "Study Planning"
+  - id: site_setup
+    label: "Site Setup"
+  - id: enrollment
+    label: "Patient Enrollment"
+  - id: data_collection
+    label: "Data Collection"
+  - id: data_management
+    label: "Data Management"
+  - id: analysis
+    label: "Statistical Analysis"
+  - id: reporting
+    label: "Regulatory Reporting"
+
+nodes:
+  - id: protocol_dev
+    label: "Protocol Development"
+    node_type: process
+    group: planning
+  - id: irb_approval
+    label: "IRB/Ethics Approval"
+    node_type: gate
+    group: planning
+  - id: crf_design
+    label: "Case Report Form Design"
+    node_type: process
+    group: planning
+  - id: db_design
+    label: "Database Design"
+    node_type: process
+    group: planning
+
+  - id: site_selection
+    label: "Site Selection & Qualification"
+    node_type: process
+    group: site_setup
+  - id: site_training
+    label: "Site Staff Training"
+    node_type: process
+    group: site_setup
+  - id: site_activation
+    label: "Site Activation"
+    node_type: gate
+    group: site_setup
+
+  - id: screening
+    label: "Patient Screening"
+    node_type: process
+    group: enrollment
+  - id: consent
+    label: "Informed Consent"
+    node_type: gate
+    group: enrollment
+  - id: eligibility
+    label: "Eligibility Assessment"
+    node_type: decision
+    group: enrollment
+  - id: randomization
+    label: "Randomization"
+    node_type: process
+    group: enrollment
+
+  - id: baseline
+    label: "Baseline Assessment"
+    node_type: process
+    group: data_collection
+  - id: treatment
+    label: "Treatment Administration"
+    node_type: process
+    group: data_collection
+  - id: follow_up
+    label: "Follow-up Visits"
+    node_type: process
+    group: data_collection
+  - id: adverse_events
+    label: "Adverse Event Reporting"
+    node_type: process
+    group: data_collection
+  - id: lab_results
+    label: "Lab Results Collection"
+    node_type: data
+    group: data_collection
+
+  - id: data_entry
+    label: "Data Entry & EDC"
+    node_type: process
+    group: data_management
+  - id: query_mgmt
+    label: "Query Management"
+    node_type: process
+    group: data_management
+  - id: coding
+    label: "Medical Coding"
+    node_type: process
+    group: data_management
+  - id: data_review
+    label: "Data Review"
+    node_type: gate
+    group: data_management
+  - id: db_lock
+    label: "Database Lock"
+    node_type: gate
+    group: data_management
+
+  - id: sap_dev
+    label: "Statistical Analysis Plan"
+    node_type: process
+    group: analysis
+  - id: primary_analysis
+    label: "Primary Endpoint Analysis"
+    node_type: subprocess
+    group: analysis
+  - id: secondary_analysis
+    label: "Secondary Analyses"
+    node_type: subprocess
+    group: analysis
+  - id: safety_analysis
+    label: "Safety Analysis"
+    node_type: subprocess
+    group: analysis
+
+  - id: csr
+    label: "Clinical Study Report"
+    node_type: process
+    group: reporting
+  - id: regulatory_sub
+    label: "Regulatory Submission"
+    node_type: end
+    group: reporting
+
+edges:
+  - { source: protocol_dev, target: irb_approval, edge_type: flow }
+  - { source: irb_approval, target: crf_design, edge_type: flow }
+  - { source: irb_approval, target: db_design, edge_type: flow }
+  - { source: irb_approval, target: site_selection, edge_type: flow }
+  - { source: crf_design, target: db_design, edge_type: flow }
+  - { source: site_selection, target: site_training, edge_type: flow }
+  - { source: site_training, target: site_activation, edge_type: flow }
+  - { source: db_design, target: site_activation, edge_type: flow }
+  - { source: site_activation, target: screening, edge_type: flow }
+  - { source: screening, target: consent, edge_type: flow }
+  - { source: consent, target: eligibility, edge_type: flow }
+  - { source: eligibility, target: randomization, edge_type: conditional, label: "Eligible" }
+  - { source: eligibility, target: screening, edge_type: feedback, label: "Screen Fail" }
+  - { source: randomization, target: baseline, edge_type: flow }
+  - { source: baseline, target: treatment, edge_type: flow }
+  - { source: treatment, target: follow_up, edge_type: flow }
+  - { source: treatment, target: adverse_events, edge_type: data_flow }
+  - { source: follow_up, target: lab_results, edge_type: data_flow }
+  - { source: follow_up, target: treatment, edge_type: feedback, label: "Next Cycle" }
+  - { source: adverse_events, target: data_entry, edge_type: data_flow }
+  - { source: lab_results, target: data_entry, edge_type: data_flow }
+  - { source: follow_up, target: data_entry, edge_type: data_flow }
+  - { source: data_entry, target: query_mgmt, edge_type: flow }
+  - { source: query_mgmt, target: coding, edge_type: flow }
+  - { source: coding, target: data_review, edge_type: flow }
+  - { source: data_review, target: query_mgmt, edge_type: feedback, label: "Discrepancies" }
+  - { source: data_review, target: db_lock, edge_type: flow }
+  - { source: db_lock, target: sap_dev, edge_type: flow }
+  - { source: sap_dev, target: primary_analysis, edge_type: flow }
+  - { source: sap_dev, target: secondary_analysis, edge_type: flow }
+  - { source: sap_dev, target: safety_analysis, edge_type: flow }
+  - { source: primary_analysis, target: csr, edge_type: flow }
+  - { source: secondary_analysis, target: csr, edge_type: flow }
+  - { source: safety_analysis, target: csr, edge_type: flow }
+  - { source: csr, target: regulatory_sub, edge_type: flow }

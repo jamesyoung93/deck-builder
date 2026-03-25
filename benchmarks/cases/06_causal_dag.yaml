@@ -1,0 +1,124 @@
+name: "Causal DAG: Smoking, Exercise, and Health"
+description: "Causal DAG demonstrating collider, mediator, confounder, and fork structures"
+version: "1.0"
+view_mode: causal
+
+nodes:
+  - id: ses
+    label: "Socioeconomic Status"
+    node_type: variable
+    causal_role: confounder
+
+  - id: education
+    label: "Education Level"
+    node_type: variable
+    causal_role: mediator
+
+  - id: smoking
+    label: "Smoking"
+    node_type: variable
+    causal_role: cause
+
+  - id: exercise
+    label: "Exercise"
+    node_type: variable
+    causal_role: cause
+
+  - id: diet
+    label: "Diet Quality"
+    node_type: variable
+    causal_role: mediator
+
+  - id: bmi
+    label: "BMI"
+    node_type: variable
+    causal_role: collider
+
+  - id: lung_function
+    label: "Lung Function"
+    node_type: variable
+    causal_role: mediator
+
+  - id: cardiovascular
+    label: "Cardiovascular Health"
+    node_type: variable
+    causal_role: effect
+
+  - id: mortality
+    label: "All-Cause Mortality"
+    node_type: variable
+    causal_role: effect
+
+  - id: genetics
+    label: "Genetic Factors"
+    node_type: latent
+    causal_role: confounder
+
+edges:
+  # SES as confounder (fork)
+  - source: ses
+    target: smoking
+    edge_type: causal
+    label: "confounds"
+
+  - source: ses
+    target: exercise
+    edge_type: causal
+    label: "confounds"
+
+  - source: ses
+    target: education
+    edge_type: causal
+
+  - source: education
+    target: diet
+    edge_type: causal
+
+  # Smoking pathways
+  - source: smoking
+    target: lung_function
+    edge_type: causal
+    weight: -0.6
+
+  - source: smoking
+    target: bmi
+    edge_type: causal
+
+  # Exercise pathways
+  - source: exercise
+    target: bmi
+    edge_type: causal
+
+  - source: exercise
+    target: cardiovascular
+    edge_type: causal
+    weight: 0.55
+
+  # BMI as collider (smoking -> BMI <- exercise)
+  # Also mediator to cardiovascular
+  - source: bmi
+    target: cardiovascular
+    edge_type: causal
+
+  # Diet mediator
+  - source: diet
+    target: bmi
+    edge_type: causal
+
+  # Lung function to mortality
+  - source: lung_function
+    target: mortality
+    edge_type: causal
+
+  - source: cardiovascular
+    target: mortality
+    edge_type: causal
+
+  # Genetics as confounder
+  - source: genetics
+    target: bmi
+    edge_type: causal
+
+  - source: genetics
+    target: cardiovascular
+    edge_type: causal

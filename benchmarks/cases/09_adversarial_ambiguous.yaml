@@ -1,0 +1,96 @@
+name: "Ambiguous Process with Missing Information"
+description: "Adversarial test case with ambiguity, missing edges, unclear semantics, and mixed types"
+version: "1.0"
+view_mode: process_flow
+
+nodes:
+  - id: start_maybe
+    label: "Start (or is it?)"
+    node_type: start
+
+  - id: step_a
+    label: "Do Something"
+    node_type: process
+
+  - id: step_b
+    label: "Do Something Else"
+    node_type: process
+
+  - id: orphan_node
+    label: "Orphan Node - Disconnected"
+    node_type: process
+
+  - id: decision_unclear
+    label: "Maybe branch here?"
+    node_type: decision
+
+  - id: step_c
+    label: "Depends on context"
+    node_type: process
+
+  - id: step_d
+    label: "Also depends"
+    node_type: process
+
+  - id: self_loop_node
+    label: "Retry Until Success"
+    node_type: process
+
+  - id: end_or_not
+    label: "Done (probably)"
+    node_type: end
+
+  - id: another_end
+    label: "Also an endpoint?"
+    node_type: end
+
+edges:
+  - source: start_maybe
+    target: step_a
+    edge_type: flow
+
+  - source: step_a
+    target: step_b
+    edge_type: flow
+
+  - source: step_a
+    target: decision_unclear
+    edge_type: flow
+
+  - source: decision_unclear
+    target: step_c
+    edge_type: conditional
+    # Missing label - deliberate defect
+
+  - source: decision_unclear
+    target: step_d
+    edge_type: conditional
+    # Missing label - deliberate defect
+
+  - source: step_b
+    target: end_or_not
+    edge_type: flow
+
+  - source: step_c
+    target: step_d
+    edge_type: association
+    label: "unclear relationship"
+
+  - source: step_d
+    target: another_end
+    edge_type: flow
+
+  - source: self_loop_node
+    target: self_loop_node
+    edge_type: feedback
+    label: "retry"
+
+  - source: step_c
+    target: self_loop_node
+    edge_type: flow
+
+  # Bidirectional - ambiguous
+  - source: step_a
+    target: step_c
+    edge_type: bidirectional
+    label: "mutual dependency?"

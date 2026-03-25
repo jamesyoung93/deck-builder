@@ -1,0 +1,102 @@
+name: "Job Satisfaction SEM"
+description: "Scientific SEM-style explanatory model of job satisfaction determinants"
+version: "1.0"
+view_mode: causal
+
+nodes:
+  - id: autonomy
+    label: "Job Autonomy"
+    node_type: variable
+    causal_role: cause
+
+  - id: skill_variety
+    label: "Skill Variety"
+    node_type: variable
+    causal_role: cause
+
+  - id: task_significance
+    label: "Task Significance"
+    node_type: variable
+    causal_role: cause
+
+  - id: psych_meaning
+    label: "Psychological Meaningfulness"
+    node_type: latent
+    causal_role: mediator
+
+  - id: psych_responsibility
+    label: "Experienced Responsibility"
+    node_type: latent
+    causal_role: mediator
+
+  - id: intrinsic_motivation
+    label: "Intrinsic Motivation"
+    node_type: latent
+    causal_role: mediator
+
+  - id: growth_need
+    label: "Growth Need Strength"
+    node_type: variable
+    causal_role: moderator
+
+  - id: job_satisfaction
+    label: "Job Satisfaction"
+    node_type: variable
+    causal_role: effect
+
+  - id: performance
+    label: "Job Performance"
+    node_type: variable
+    causal_role: effect
+
+  - id: turnover_intent
+    label: "Turnover Intention"
+    node_type: variable
+    causal_role: effect
+
+edges:
+  - source: autonomy
+    target: psych_responsibility
+    edge_type: causal
+    weight: 0.65
+
+  - source: skill_variety
+    target: psych_meaning
+    edge_type: causal
+    weight: 0.72
+
+  - source: task_significance
+    target: psych_meaning
+    edge_type: causal
+    weight: 0.58
+
+  - source: psych_meaning
+    target: intrinsic_motivation
+    edge_type: causal
+    weight: 0.81
+
+  - source: psych_responsibility
+    target: intrinsic_motivation
+    edge_type: causal
+    weight: 0.67
+
+  - source: intrinsic_motivation
+    target: job_satisfaction
+    edge_type: causal
+    weight: 0.85
+
+  - source: growth_need
+    target: intrinsic_motivation
+    edge_type: moderation
+    label: "moderates"
+
+  - source: job_satisfaction
+    target: performance
+    edge_type: causal
+    weight: 0.42
+
+  - source: job_satisfaction
+    target: turnover_intent
+    edge_type: causal
+    weight: -0.68
+    label: "negative"

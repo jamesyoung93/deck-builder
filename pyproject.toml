@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deck-builder"
+version = "0.1.0"
+description = "Consulting-quality PowerPoint and scientific figure generation engine"
+requires-python = ">=3.10"
+dependencies = [
+    "python-pptx>=1.0",
+    "pillow>=10.0",
+    "pyyaml>=6.0",
+    "matplotlib>=3.7",
+    "fontawesome>=5.0",
+]
+
+[project.optional-dependencies]
+diagrams = ["graphviz>=0.20", "pydot>=2.0"]
+
+[tool.setuptools.packages.find]
+include = ["slide_engine*", "sem_engine*"]
+
+[tool.setuptools.package-data]
+slide_engine = ["tools/**/*.png", "tools/**/*.ttf", "tools/**/*.svg"]

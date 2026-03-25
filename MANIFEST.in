@@ -1,0 +1,3 @@
+recursive-include slide_engine/tools *.png *.ttf *.svg
+recursive-include benchmarks *.yaml
+include CLAUDE.md README.md

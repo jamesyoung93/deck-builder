@@ -1,0 +1,155 @@
+name: "ML Monitoring & Retraining Loop"
+description: "Production ML system with monitoring, drift detection, and automated retraining"
+version: "1.0"
+view_mode: process_flow
+
+groups:
+  - id: serving
+    label: "Model Serving"
+  - id: monitoring
+    label: "Monitoring & Alerting"
+  - id: retraining
+    label: "Automated Retraining"
+
+nodes:
+  - id: model_serving
+    label: "Production Model"
+    node_type: process
+    group: serving
+    process_role: transform
+
+  - id: predictions
+    label: "Generate Predictions"
+    node_type: process
+    group: serving
+    process_role: output
+
+  - id: log_preds
+    label: "Log Predictions"
+    node_type: data
+    group: serving
+    process_role: store
+
+  - id: collect_feedback
+    label: "Collect Ground Truth"
+    node_type: external
+    group: monitoring
+    process_role: input
+
+  - id: drift_monitor
+    label: "Data Drift Monitor"
+    node_type: monitor
+    group: monitoring
+    process_role: monitor
+
+  - id: perf_monitor
+    label: "Performance Monitor"
+    node_type: monitor
+    group: monitoring
+    process_role: monitor
+
+  - id: alert_check
+    label: "Drift or Degradation?"
+    node_type: decision
+    group: monitoring
+
+  - id: trigger_retrain
+    label: "Trigger Retraining"
+    node_type: gate
+    group: retraining
+    process_role: approve
+
+  - id: new_data_prep
+    label: "Prepare New Training Data"
+    node_type: process
+    group: retraining
+    process_role: transform
+
+  - id: retrain_model
+    label: "Retrain Model"
+    node_type: subprocess
+    group: retraining
+    process_role: transform
+
+  - id: champion_challenger
+    label: "Champion vs Challenger"
+    node_type: process
+    group: retraining
+    process_role: validate
+
+  - id: promote_decision
+    label: "Promote New Model?"
+    node_type: decision
+    group: retraining
+
+  - id: deploy_new
+    label: "Deploy New Model"
+    node_type: process
+    group: retraining
+    process_role: deploy
+
+edges:
+  - source: model_serving
+    target: predictions
+    edge_type: flow
+
+  - source: predictions
+    target: log_preds
+    edge_type: data_flow
+
+  - source: log_preds
+    target: drift_monitor
+    edge_type: data_flow
+
+  - source: collect_feedback
+    target: perf_monitor
+    edge_type: data_flow
+
+  - source: drift_monitor
+    target: alert_check
+    edge_type: flow
+
+  - source: perf_monitor
+    target: alert_check
+    edge_type: flow
+
+  - source: alert_check
+    target: model_serving
+    edge_type: conditional
+    label: "No Issues"
+
+  - source: alert_check
+    target: trigger_retrain
+    edge_type: conditional
+    label: "Alert!"
+
+  - source: trigger_retrain
+    target: new_data_prep
+    edge_type: flow
+
+  - source: new_data_prep
+    target: retrain_model
+    edge_type: flow
+
+  - source: retrain_model
+    target: champion_challenger
+    edge_type: flow
+
+  - source: champion_challenger
+    target: promote_decision
+    edge_type: flow
+
+  - source: promote_decision
+    target: deploy_new
+    edge_type: conditional
+    label: "Yes"
+
+  - source: promote_decision
+    target: model_serving
+    edge_type: conditional
+    label: "No - Keep Current"
+
+  - source: deploy_new
+    target: model_serving
+    edge_type: feedback
+    label: "Replace Model"
