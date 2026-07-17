@@ -1,6 +1,8 @@
 # deck-builder
 
-Generate consulting-quality PowerPoint presentations from natural language. All slides are native PowerPoint shapes — independently movable and editable.
+Generate consulting-quality PowerPoint presentations from natural language through a structured YAML specification. The package separates narrative planning from deterministic rendering, and every slide is built from native PowerPoint shapes that remain movable and editable.
+
+The workflow supports Databricks model endpoints, OpenAI, Anthropic, and Azure OpenAI, while the rendering engine can also build a deck from hand-edited YAML without an LLM call.
 
 ---
 
